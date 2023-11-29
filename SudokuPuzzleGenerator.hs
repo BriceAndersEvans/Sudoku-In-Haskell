@@ -3,6 +3,10 @@
 {- Imports -}
 import Control.Monad ( guard )
 import Data.Maybe ( isJust, isNothing )
+import System.Random ( randomRIO )
+import System.Random (newStdGen, randomRs)
+import Control.Monad (guard, liftM2)
+
 
 {- SUDOKU GRID GENERATION -}
 
@@ -21,14 +25,38 @@ emptyGrid = replicate 9 (replicate 9 Nothing)
 
 -- Generates a completed Sudoku grid
 -- r is row, c is column
-generateCompletedGrid :: Grid -> [Grid]
+-- Generate a completed Sudoku grid
+generateCompletedGrid :: Grid -> IO (Maybe Grid)
 generateCompletedGrid grid
-    | isFull grid = [grid]
-    | otherwise   = do
+    | isFull grid = return $ Just grid
+    | otherwise = do
         let (r, c) = findEmptyCell grid
-        n <- [1..9]
-        guard (isValid n r c grid)
-        generateCompletedGrid (updateGrid r c (Just n) grid)
+        nums <- randomPermutation [1..9]
+        tryNumbers r c nums grid
+
+-- Try to place one of the numbers in the list into the grid
+tryNumbers :: Int -> Int -> [Int] -> Grid -> IO (Maybe Grid)
+tryNumbers _ _ [] _ = return Nothing  -- No number fits, backtrack
+tryNumbers r c (n:ns) grid
+    | isValid n r c grid = do
+        let newGrid = updateGrid r c (Just n) grid
+        result <- generateCompletedGrid newGrid
+        case result of
+            Just g -> return $ Just g
+            Nothing -> tryNumbers r c ns grid  -- Backtrack and try next number
+    | otherwise = tryNumbers r c ns grid  -- Current number doesn't fit, try next
+
+-- Generate a random permutation of a list
+randomPermutation :: [Int] -> IO [Int]
+randomPermutation [] = return []
+randomPermutation xs = do
+    i <- randomRIO (0, length xs - 1)
+    let (lead, x:rest) = splitAt i xs
+    fmap (x:) $ randomPermutation (lead ++ rest)
+
+-- Generate a random list of numbers within a range
+randomList :: Int -> Int -> IO [Int]
+randomList low high = newStdGen >>= return . randomRs (low, high)
 
 -- Checks to see if grid is full
 isFull :: Grid -> Bool
@@ -85,10 +113,11 @@ printGrid grid = mapM_ printRow grid
 {- MAIN -}
 main :: IO ()
 main = do
-    let completedGrids = generateCompletedGrid emptyGrid
-    case completedGrids of
-        (grid:_) -> do
+    putStrLn "Generating a completed Sudoku grid..."
+    result <- generateCompletedGrid emptyGrid
+    case result of
+        Just grid -> do
             putStrLn "Completed Grid:"
             printGrid grid
-            -- Here you can add logic to remove numbers and create a puzzle
-        [] -> putStrLn "No solution found"
+            -- Add logic to remove numbers and create a puzzle
+        Nothing -> putStrLn "No solution found"
