@@ -1,0 +1,15 @@
+Planned Features:
+
+- Puzzle Generator 
+  - Create a Puzzle Generator [Check]
+  - Create a Puzzle Scrambler []
+  - 
+  -
+- Puzzle To User
+  - Display and Update Puzzle To User
+  - Command Prompt Integeration of User Input 
+  - GUI
+- Puzzle Solver 
+  - Take Input of A Puzzle
+  - Solve Puzzle
+  - Output Solution of Puzzle

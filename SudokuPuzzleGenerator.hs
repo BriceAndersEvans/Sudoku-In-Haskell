@@ -5,7 +5,11 @@ import Control.Monad ( guard )
 import Data.Maybe ( isJust, isNothing )
 import System.Random ( randomRIO )
 import System.Random (newStdGen, randomRs)
-import Control.Monad (guard, liftM2)
+import Control.Monad (guard, liftM2, when)
+import Control.Monad (liftM3)
+import Text.Read (readMaybe)
+import System.Random (randomRIO, newStdGen, randomRs)
+import Control.Monad (guard, when)
 
 
 {- SUDOKU GRID GENERATION -}
@@ -97,27 +101,91 @@ updateGrid r c val grid =
     [take c (grid !! r) ++ [val] ++ drop (c + 1) (grid !! r)] ++
     drop (r + 1) grid
 
-{- HELPER FUNCTIONS FOR MAIN-}
--- Function to display the grid
-printGrid :: Grid -> IO ()
-printGrid grid = mapM_ printRow grid
-  where
-    printRow :: [Cell] -> IO ()
-    printRow row = putStrLn $ unwords $ map showCell row
 
-    showCell :: Cell -> String
-    showCell Nothing  = "."
-    showCell (Just n) = show n
+
+{- HELPER FUNCTIONS FOR MAIN-}
+
+-- Function to display the Sudoku grid with grid lines and indices
+displayGrid :: Grid -> IO ()
+displayGrid grid = do
+    putStrLn "    1 2 3   4 5 6   7 8 9"
+    putStrLn "  +-------+-------+-------+"
+    mapM_ printRow (zip [1..] grid)
+    where
+        printRow (i, row) = do
+            putStr (show i ++ " | ")
+            putStrLn $ concatMap showCell (zip [1..] row) ++ "|"
+            when (i `mod` 3 == 0) $ putStrLn "  +-------+-------+-------+"
+
+        showCell (j, cell) = showCellValue cell ++ (if j `mod` 3 == 0 then " | " else " ")
+
+        showCellValue Nothing = "."
+        showCellValue (Just n) = show n
+
+-- Remove 'n' numbers from the grid to create a puzzle
+removeNumbers :: Int -> Grid -> IO Grid
+removeNumbers 0 grid = return grid
+removeNumbers n grid = do
+    row <- randomRIO (0, 8)
+    col <- randomRIO (0, 8)
+    let cell = grid !! row !! col
+    if isNothing cell
+        then removeNumbers n grid  -- Cell is already empty, try again
+        else removeNumbers (n - 1) (updateGrid row col Nothing grid)
 
 
 {- MAIN -}
 main :: IO ()
 main = do
-    putStrLn "Generating a completed Sudoku grid..."
+    putStrLn "Generating a Sudoku puzzle..."
     result <- generateCompletedGrid emptyGrid
     case result of
-        Just grid -> do
-            putStrLn "Completed Grid:"
-            printGrid grid
-            -- Add logic to remove numbers and create a puzzle
+        Just completedGrid -> do
+            putStrLn "Completed Grid (for reference):"
+            displayGrid completedGrid
+            puzzleGrid <- removeNumbers 30 completedGrid  -- Remove 30 numbers for example
+            putStrLn "Sudoku Puzzle:"
+            displayGrid puzzleGrid
+            playGame puzzleGrid
         Nothing -> putStrLn "No solution found"
+
+
+
+{- PLAYABLE GAME -}
+
+-- Function to play the game
+playGame :: Grid -> IO ()
+playGame grid = do
+    putStrLn "Current Sudoku Puzzle:"
+    displayGrid grid
+    if isFull grid && isValidGrid grid
+        then putStrLn "Congratulations! You solved the puzzle!"
+        else do
+            putStrLn "Enter row, column, and number (e.g., 2 3 5) or 'q' to quit:"
+            input <- getLine
+            case input of
+                "q" -> putStrLn "Exiting game."
+                _   -> case parseInput input of
+                          Just (r, c, n) -> if isValid n r c grid
+                                                then playGame (updateGrid r c (Just n) grid)
+                                                else putStrLn "Invalid move" >> playGame grid
+                          Nothing -> putStrLn "Invalid input" >> playGame grid
+
+{- Helper Functions for playGame-}
+
+-- Parse user input
+parseInput :: String -> Maybe (Int, Int, Int)
+parseInput input = case words input of
+    [rs, cs, ns] -> liftM3 (,,) (readMaybe rs) (readMaybe cs) (readMaybe ns)
+    _            -> Nothing
+
+
+-- Check if the entire grid is valid
+isValidGrid :: Grid -> Bool
+isValidGrid grid = all (\r -> all (\c -> isValidCell r c grid) [0..8]) [0..8]
+
+-- Check if a cell is valid in the grid
+isValidCell :: Int -> Int -> Grid -> Bool
+isValidCell r c grid = case grid !! r !! c of
+    Nothing -> True
+    Just n  -> isValid n r c grid
