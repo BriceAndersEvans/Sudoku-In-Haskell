@@ -6,7 +6,7 @@ Planned Features:
   - 
   -
 - Puzzle To User
-  - Display and Update Puzzle To User
+  - Display and Update Puzzle To User [Check]
   - Command Prompt Integeration of User Input 
   - GUI
 - Puzzle Solver 

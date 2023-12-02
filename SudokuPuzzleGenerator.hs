@@ -11,14 +11,13 @@ import Text.Read (readMaybe)
 import System.Random (randomRIO, newStdGen, randomRs)
 import Control.Monad (guard, when)
 
-
 {- SUDOKU GRID GENERATION -}
 
 {- Grid Cells -}
 {- A sudoku puzzle is made of a 9x9 grid of cells -}
 
 -- A cell can be empty (Nothing) or contain a number (0-9) (Just n)
-type Cell = Maybe Int  
+type Cell = Maybe Int
 
 -- The Sudoku grid is a list of rows
 type Grid = [[Cell]]
@@ -70,9 +69,13 @@ isFull = all (all isJust)
 findEmptyCell :: Grid -> (Int, Int)
 findEmptyCell grid = head [(r, c) | (r, row) <- zip [0..] grid, (c, cell) <- zip [0..] row, isNothing cell]
 
--- Checks if placing 'n' in (r, c) is valid
+-- Checks if placing 'n' in (r, c) is valid --bugged
 isValid :: Int -> Int -> Int -> Grid -> Bool
 isValid n r c grid = all (validIn n) [getRow r grid, getColumn c grid, getBox r c grid]
+
+-- Check if 'n' is not in the given list of cells
+validIn :: Int -> [Cell] -> Bool
+validIn n cells = notElem (Just n) cells
 
 -- Gets a specific row
 getRow :: Int -> Grid -> [Cell]
@@ -90,12 +93,10 @@ getBox r c grid = [grid !! r' !! c' | r' <- boxRange r, c' <- boxRange c]
 boxRange :: Int -> [Int]
 boxRange x = let start = (x `div` 3) * 3 in [start .. start + 2]
 
--- Check if 'n' is not in the given list of cells
-validIn :: Int -> [Cell] -> Bool
-validIn n cells = notElem (Just n) cells
+
 
 -- Update the grid at specificed position (r, c)
-updateGrid :: Int -> Int -> Cell -> Grid -> Grid
+updateGrid :: Int -> Int -> Cell -> Grid -> Grid --bugged
 updateGrid r c val grid = 
     take r grid ++
     [take c (grid !! r) ++ [val] ++ drop (c + 1) (grid !! r)] ++
@@ -150,7 +151,6 @@ main = do
         Nothing -> putStrLn "No solution found"
 
 
-
 {- PLAYABLE GAME -}
 
 -- Function to play the game
@@ -166,9 +166,11 @@ playGame grid = do
             case input of
                 "q" -> putStrLn "Exiting game."
                 _   -> case parseInput input of
-                          Just (r, c, n) -> if isValid n r c grid
-                                                then playGame (updateGrid r c (Just n) grid)
-                                                else putStrLn "Invalid move" >> playGame grid
+                          Just (r, c, n) -> if isValid n (r-1) (c-1) grid
+                                                then playGame (updateGrid (r-1) (c-1) (Just n) grid)
+                                                else do
+                                                    putStrLn $ "Invalid move for row " ++ show r ++ ", column " ++ show c ++ ", number " ++ show n
+                                                    playGame grid
                           Nothing -> putStrLn "Invalid input" >> playGame grid
 
 {- Helper Functions for playGame-}
