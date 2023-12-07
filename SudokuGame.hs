@@ -1,34 +1,29 @@
-{- Sudoku Puzzle Generator -}
+{- SudokuGame file has the functionality of generating a scrambled sudoku puzzle for a user to solve via terminal input-}
+module SudokuGame where
 
 {- Imports -}
-import Control.Monad ( guard )
-import Data.Maybe ( isJust, isNothing )
-import System.Random ( randomRIO )
-import System.Random (newStdGen, randomRs)
-import Control.Monad (guard, liftM2, when)
-import Control.Monad (liftM3)
-import Text.Read (readMaybe)
+import Control.Monad (guard, when, liftM2, liftM3)
+import Data.Maybe (isJust, isNothing)
 import System.Random (randomRIO, newStdGen, randomRs)
-import Control.Monad (guard, when)
+import Text.Read (readMaybe)
 
-{- SUDOKU GRID GENERATION -}
+{-----------------------------------}
+{- Sudoku Puzzle Generator Portion -}
+{-----------------------------------}
 
-{- Grid Cells -}
-{- A sudoku puzzle is made of a 9x9 grid of cells -}
+{- Type Defintions-}
+type Cell = Maybe Int     -- A cell is a Maybe Int
+type Grid = [[Cell]]      -- A grid is a list of lists of cells
 
--- A cell can be empty (Nothing) or contain a number (0-9) (Just n)
-type Cell = Maybe Int
+{- Sudoku Grid, Box, & Cell Generation -}
 
--- The Sudoku grid is a list of rows
-type Grid = [[Cell]]
-
--- Generates a empty Sudoku grid
+-- | `emptyGrid` generates an empty Sudoku grid.
 emptyGrid :: Grid
 emptyGrid = replicate 9 (replicate 9 Nothing)
 
--- Generates a completed Sudoku grid
--- r is row, c is column
--- Generate a completed Sudoku grid
+-- | `generateCompletedGrid` generates a completed Sudoku grid.
+--   It takes an initial grid and returns a Maybe Grid representing
+--   a completed Sudoku grid if one exists.
 generateCompletedGrid :: Grid -> IO (Maybe Grid)
 generateCompletedGrid grid
     | isFull grid = return $ Just grid
@@ -37,19 +32,22 @@ generateCompletedGrid grid
         nums <- randomPermutation [1..9]
         tryNumbers r c nums grid
 
--- Try to place one of the numbers in the list into the grid
+-- | `tryNumbers` attempts to fill a cell with numbers.
+--   It takes row, column, a list of numbers to try, and the grid.
+--   It returns a Maybe Grid representing the updated grid if successful,
+--   or Nothing if no valid number can be placed.
 tryNumbers :: Int -> Int -> [Int] -> Grid -> IO (Maybe Grid)
-tryNumbers _ _ [] _ = return Nothing  -- No number fits, backtrack
+tryNumbers _ _ [] _ = return Nothing  -- No numbers left to try
 tryNumbers r c (n:ns) grid
     | isValid n r c grid = do
         let newGrid = updateGrid r c (Just n) grid
         result <- generateCompletedGrid newGrid
         case result of
             Just g -> return $ Just g
-            Nothing -> tryNumbers r c ns grid  -- Backtrack and try next number
-    | otherwise = tryNumbers r c ns grid  -- Current number doesn't fit, try next
+            Nothing -> tryNumbers r c ns grid  -- Backtracks to try the next number
+    | otherwise = tryNumbers r c ns grid  -- Number is not valid, try the next number
 
--- Generate a random permutation of a list
+-- | `randomPermutation` generates a random permutation of a list of numbers.
 randomPermutation :: [Int] -> IO [Int]
 randomPermutation [] = return []
 randomPermutation xs = do
@@ -57,56 +55,52 @@ randomPermutation xs = do
     let (lead, x:rest) = splitAt i xs
     fmap (x:) $ randomPermutation (lead ++ rest)
 
--- Generate a random list of numbers within a range
+-- | `randomList` generates a random list of numbers within a range.
 randomList :: Int -> Int -> IO [Int]
 randomList low high = newStdGen >>= return . randomRs (low, high)
 
--- Checks to see if grid is full
+-- | `isFull` checks if the grid is full.
 isFull :: Grid -> Bool
 isFull = all (all isJust)
 
--- Finds the first empty cell in the grid
+-- | `findEmptyCell` finds the coordinates of an empty cell in the grid.
 findEmptyCell :: Grid -> (Int, Int)
 findEmptyCell grid = head [(r, c) | (r, row) <- zip [0..] grid, (c, cell) <- zip [0..] row, isNothing cell]
 
--- Checks if placing 'n' in (r, c) is valid --bugged
+-- | `isValid` checks if a number is valid in a cell.
 isValid :: Int -> Int -> Int -> Grid -> Bool
 isValid n r c grid = all (validIn n) [getRow r grid, getColumn c grid, getBox r c grid]
 
--- Check if 'n' is not in the given list of cells
+-- | `validIn` checks if a number is valid in a list of cells.
 validIn :: Int -> [Cell] -> Bool
 validIn n cells = notElem (Just n) cells
 
--- Gets a specific row
+-- | `getRow` gets a row from the grid.
 getRow :: Int -> Grid -> [Cell]
 getRow r = (!! r)
 
--- Gets a specific column
+-- | `getColumn` gets a column from the grid.
 getColumn :: Int -> Grid -> [Cell]
 getColumn c = map (!! c)
 
--- Gets the 3x3 box containing (r, c)
+-- | `getBox` gets a box from the grid.
 getBox :: Int -> Int -> Grid -> [Cell]
 getBox r c grid = [grid !! r' !! c' | r' <- boxRange r, c' <- boxRange c]
 
--- Gets the range of the 3x3 box containing (r, c)
+-- | `boxRange` gets the range of a box.
 boxRange :: Int -> [Int]
 boxRange x = let start = (x `div` 3) * 3 in [start .. start + 2]
 
-
-
--- Update the grid at specificed position (r, c)
-updateGrid :: Int -> Int -> Cell -> Grid -> Grid --bugged
-updateGrid r c val grid = 
+-- | `updateGrid` updates a cell in the grid.
+updateGrid :: Int -> Int -> Cell -> Grid -> Grid
+updateGrid r c val grid =
     take r grid ++
     [take c (grid !! r) ++ [val] ++ drop (c + 1) (grid !! r)] ++
     drop (r + 1) grid
 
+{- Helper Functions Sudoku Generator -}
 
-
-{- HELPER FUNCTIONS FOR MAIN-}
-
--- Function to display the Sudoku grid with grid lines and indices
+-- | `displayGrid` displays the Sudoku grid with grid lines and indices.
 displayGrid :: Grid -> IO ()
 displayGrid grid = do
     putStrLn "    1 2 3   4 5 6   7 8 9"
@@ -123,7 +117,7 @@ displayGrid grid = do
         showCellValue Nothing = "."
         showCellValue (Just n) = show n
 
--- Remove 'n' numbers from the grid to create a puzzle
+-- | `removeNumbers` removes 'n' numbers from the grid to create a puzzle.
 removeNumbers :: Int -> Grid -> IO Grid
 removeNumbers 0 grid = return grid
 removeNumbers n grid = do
@@ -134,26 +128,31 @@ removeNumbers n grid = do
         then removeNumbers n grid  -- Cell is already empty, try again
         else removeNumbers (n - 1) (updateGrid row col Nothing grid)
 
+{------------------------------}
+{- Sudoku Puzzle Game Portion -}
+{------------------------------}
 
-{- MAIN -}
-main :: IO ()
-main = do
-    putStrLn "Generating a Sudoku puzzle..."
-    result <- generateCompletedGrid emptyGrid
-    case result of
-        Just completedGrid -> do
-            putStrLn "Completed Grid (for reference):"
-            displayGrid completedGrid
-            puzzleGrid <- removeNumbers 30 completedGrid  -- Remove 30 numbers for example
-            putStrLn "Sudoku Puzzle:"
-            displayGrid puzzleGrid
-            playGame puzzleGrid
-        Nothing -> putStrLn "No solution found"
+{- Type Defintions-}
 
+{- Helper Functions for playGame-}
 
-{- PLAYABLE GAME -}
+-- | `parseInput` parses the user input.
+parseInput :: String -> Maybe (Int, Int, Int)
+parseInput input = case words input of
+    [rs, cs, ns] -> liftM3 (,,) (readMaybe rs) (readMaybe cs) (readMaybe ns)
+    _            -> Nothing
 
--- Function to play the game
+-- | `isValidGrid` checks if the entire grid is valid
+isValidGrid :: Grid -> Bool
+isValidGrid grid = all (\r -> all (\c -> isValidCell r c grid) [0..8]) [0..8]
+
+-- | `isValidCell` checks if a cell is valid in the grid
+isValidCell :: Int -> Int -> Grid -> Bool
+isValidCell r c grid = case grid !! r !! c of
+    Nothing -> True
+    Just n  -> isValid n r c grid
+
+{- playGame Function For Sudoku Game Puzzle-}
 playGame :: Grid -> IO ()
 playGame grid = do
     putStrLn "Current Sudoku Puzzle:"
@@ -173,21 +172,17 @@ playGame grid = do
                                                     playGame grid
                           Nothing -> putStrLn "Invalid input" >> playGame grid
 
-{- Helper Functions for playGame-}
-
--- Parse user input
-parseInput :: String -> Maybe (Int, Int, Int)
-parseInput input = case words input of
-    [rs, cs, ns] -> liftM3 (,,) (readMaybe rs) (readMaybe cs) (readMaybe ns)
-    _            -> Nothing
-
-
--- Check if the entire grid is valid
-isValidGrid :: Grid -> Bool
-isValidGrid grid = all (\r -> all (\c -> isValidCell r c grid) [0..8]) [0..8]
-
--- Check if a cell is valid in the grid
-isValidCell :: Int -> Int -> Grid -> Bool
-isValidCell r c grid = case grid !! r !! c of
-    Nothing -> True
-    Just n  -> isValid n r c grid
+{- Main Of Sudoku Game -}
+main :: IO ()
+main = do
+    putStrLn "Generating a Sudoku puzzle..."
+    result <- generateCompletedGrid emptyGrid
+    case result of
+        Just completedGrid -> do
+            putStrLn "Completed Grid (for reference):"
+            displayGrid completedGrid
+            puzzleGrid <- removeNumbers 30 completedGrid  -- 30 is the default value for removing numbers
+            putStrLn "Sudoku Puzzle:"
+            displayGrid puzzleGrid
+            playGame puzzleGrid
+        Nothing -> putStrLn "No solution found"
