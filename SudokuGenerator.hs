@@ -6,7 +6,7 @@ import Control.Monad (guard, when)
 import Data.Maybe (isJust, isNothing)
 import System.Random (randomRIO, newStdGen, randomRs)
 
-{- Type Defintions-}
+{- Type Defintions -}
 type Cell = Maybe Int     -- A cell is a Maybe Int
 type Grid = [[Cell]]      -- A grid is a list of lists of cells
 

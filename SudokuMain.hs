@@ -2,32 +2,6 @@ import qualified SudokuGenerator as Generator
 import qualified SudokuGame as Game
 import qualified SudokuSolver as Solver
 
-{- Mains-}
-
--- | `main` is the main function of the Sudoku program.
-main :: IO ()
-main = do
-    putStrLn "Welcome to the Sudoku Program!"
-    putStrLn "This program can generate Sudoku puzzles, solve Sudoku puzzles, and play Sudoku games."
-    putStrLn "Created By Anders Evans, Thomas Hudson, and Matthew Taylor"
-    mainMenu
-
--- | `mainMenu` is the main menu of the Sudoku program.
-mainMenu :: IO ()
-mainMenu = do
-    putStrLn "\nPlease select an option:"
-    putStrLn "1. Generate a Sudoku puzzle"
-    putStrLn "2. Solve a Sudoku puzzle"
-    putStrLn "3. Play Sudoku game"
-    putStrLn "4. Exit"
-    option <- getLine
-    case option of
-        "1" -> generatePuzzleOption
-        "2" -> solvePuzzleOption
-        "3" -> playGameOption
-        "4" -> putStrLn "Exiting the program."
-        _   -> putStrLn "Invalid option, please try again." >> mainMenu
-
 {- Main Menu Option Functions-}
 
 -- | `generatePuzzleOption` is the main menu option to generate a Sudoku puzzle.
@@ -67,3 +41,30 @@ playGameOption = do
             Game.playGame puzzleGrid
         Nothing -> putStrLn "No solution found"
     mainMenu
+
+{- Mains-}
+
+-- | `main` is the main function of the Sudoku program.
+main :: IO ()
+main = do
+    putStrLn "Welcome to the Sudoku Program!"
+    putStrLn "This program can generate Sudoku puzzles, solve Sudoku puzzles, and play Sudoku games."
+    putStrLn "Created By Anders Evans, Thomas Hudson, and Matthew Taylor"
+    mainMenu
+
+-- | `mainMenu` is the main menu of the Sudoku program.
+mainMenu :: IO ()
+mainMenu = do
+    putStrLn "\nPlease select an option:"
+    putStrLn "1. Generate a Sudoku puzzle"
+    putStrLn "2. Solve a Sudoku puzzle"
+    putStrLn "3. Play Sudoku game"
+    putStrLn "4. Exit"
+    option <- getLine
+    case option of
+        "1" -> generatePuzzleOption
+        "2" -> solvePuzzleOption
+        "3" -> playGameOption
+        "4" -> putStrLn "Exiting the program."
+        _   -> putStrLn "Invalid option, please try again." >> mainMenu
+
