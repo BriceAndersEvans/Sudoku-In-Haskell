@@ -180,7 +180,7 @@ main = do
     case result of
         Just completedGrid -> do
             putStrLn "Completed Grid (for reference):"
-            displayGrid completedGrid
+            -- displayGrid completedGrid (for reference during testing)
             puzzleGrid <- removeNumbers 30 completedGrid  -- 30 is the default value for removing numbers
             putStrLn "Sudoku Puzzle:"
             displayGrid puzzleGrid
