@@ -6,6 +6,7 @@ import Control.Monad (guard, when, liftM2, liftM3)
 import Data.Maybe (isJust, isNothing)
 import System.Random (randomRIO, newStdGen, randomRs)
 import Text.Read (readMaybe)
+import Data.Bool (Bool)
 
 {-----------------------------------}
 {- Sudoku Puzzle Generator Portion -}
@@ -67,13 +68,18 @@ isFull = all (all isJust)
 findEmptyCell :: Grid -> (Int, Int)
 findEmptyCell grid = head [(r, c) | (r, row) <- zip [0..] grid, (c, cell) <- zip [0..] row, isNothing cell]
 
+-- | 'inRange'
+inRange :: Int -> Int -> Bool
+inRange r c 
+    | ( r > 0 && r < 10 ) && ( c > 0 && c < 10) = True
+    | otherwise = False;
+
 -- | `isValid` checks if a number is valid in a cell.
 isValid :: Int -> Int -> Int -> Grid -> Bool
-isValid n r c grid = all (validIn n) [getRow r grid, getColumn c grid, getBox r c grid]
-
--- | `validIn` checks if a number is valid in a list of cells.
+isValid n r c grid = (inRange r c) && (all (validIn n) [getRow r grid, getColumn c grid, getBox r c grid])
+-- | `validIn` checks if a number is valid in a list of cells. Also checks if n is in range
 validIn :: Int -> [Cell] -> Bool
-validIn n cells = notElem (Just n) cells
+validIn n cells = ( n > 0 && n < 10 ) && (notElem (Just n) cells)
 
 -- | `getRow` gets a row from the grid.
 getRow :: Int -> Grid -> [Cell]
