@@ -3,10 +3,12 @@ module SudokuGame where
 
 {- Imports -}
 import Control.Monad (guard, when, liftM2, liftM3)
-import Data.Maybe (isJust, isNothing)
+import Data.Maybe (isJust, isNothing, catMaybes)
 import System.Random (randomRIO, newStdGen, randomRs)
 import Text.Read (readMaybe)
 import Data.Bool (Bool)
+import Data.List (nub)
+
 
 {-----------------------------------}
 {- Sudoku Puzzle Generator Portion -}
@@ -71,7 +73,7 @@ findEmptyCell grid = head [(r, c) | (r, row) <- zip [0..] grid, (c, cell) <- zip
 -- | 'inRange'
 inRange :: Int -> Int -> Bool
 inRange r c 
-    | ( r > 0 && r < 10 ) && ( c > 0 && c < 10) = True
+    | ( r > -1 && r < 9 ) && ( c > -1 && c < 9) = True
     | otherwise = False;
 
 -- | `isValid` checks if a number is valid in a cell.
@@ -92,6 +94,11 @@ getColumn c = map (!! c)
 -- | `getBox` gets a box from the grid.
 getBox :: Int -> Int -> Grid -> [Cell]
 getBox r c grid = [grid !! r' !! c' | r' <- boxRange r, c' <- boxRange c]
+
+getBox' :: Int -> Int -> Grid -> [Cell]
+getBox' r c grid = [grid !! r' !! c' | r' <- boxRange r, c' <- boxRange c]
+    where
+        boxRange x = let start = (x `div` 3) * 3 in [start .. start + 2]
 
 -- | `boxRange` gets the range of a box.
 boxRange :: Int -> [Int]
@@ -152,6 +159,16 @@ parseInput input = case words input of
 isValidGrid :: Grid -> Bool
 isValidGrid grid = all (\r -> all (\c -> isValidCell r c grid) [0..8]) [0..8]
 
+isValidGrid' :: Grid -> Bool
+isValidGrid' grid = all isUniqueRow [0..8] && all isUniqueColumn [0..8] && all isUniqueBox [(r, c) | r <- [0, 3, 6], c <- [0, 3, 6]]
+    where
+        isUniqueRow r = isUnique (catMaybes $ getRow r grid)
+        isUniqueColumn c = isUnique (catMaybes $ getColumn c grid)
+        isUniqueBox (r, c) = isUnique (catMaybes $ getBox' r c grid)
+
+        isUnique :: [Int] -> Bool
+        isUnique lst = length lst == length (nub lst)
+
 -- | `isValidCell` checks if a cell is valid in the grid
 isValidCell :: Int -> Int -> Grid -> Bool
 isValidCell r c grid = case grid !! r !! c of
@@ -163,8 +180,10 @@ playGame :: Grid -> IO ()
 playGame grid = do
     putStrLn "Current Sudoku Puzzle:"
     displayGrid grid
-    if isFull grid && isValidGrid grid
-        then putStrLn "Congratulations! You solved the puzzle!"
+    if isFull grid
+        then if isValidGrid' grid
+            then putStrLn "Congratulations! You solved the puzzle!"
+            else putStrLn "The puzzle is full but not solved correctly."
         else do
             putStrLn "Enter row, column, and number (e.g., 2 3 5) or 'q' to quit:"
             input <- getLine
