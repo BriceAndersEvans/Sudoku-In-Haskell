@@ -30,15 +30,19 @@ solvePuzzleOption = do
 -- | `playGameOption` is the main menu option to play a Sudoku game.
 playGameOption :: IO ()
 playGameOption = do
-    putStrLn "Starting a game of Sudoku..."
+    putStrLn "Starting a game of Sudoku...\n"
     -- Generate a completed grid and remove numbers to create a puzzle
     result <- Generator.generateCompletedGrid Generator.emptyGrid
     case result of
         Just completedGrid -> do
             puzzleGrid <- Generator.removeNumbers 30 completedGrid
-            putStrLn "Sudoku Puzzle:"
-            Generator.displayGrid puzzleGrid
-            Game.playGame puzzleGrid
+            let candidates = Game.emptyCandidates
+            putStrLn "How to play:"            
+            putStrLn "-Enter row, column, and number (e.g., 2 3 5) or 'q' to quit:"
+            putStrLn "-To add candidates type 'addCandidate:' followed by row, column, and number."
+            putStrLn "-To remove candidates type 'removeCandidate:' followed by row, column, and number."
+            putStrLn "-To a list of candidates at any cell type 'getCandidates:' followed by the row and column.\n"
+            Game.playGame puzzleGrid candidates
         Nothing -> putStrLn "No solution found"
     mainMenu
 
