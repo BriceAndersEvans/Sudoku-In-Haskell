@@ -78,6 +78,13 @@ tryNumbers r c (n:ns) grid
             Nothing -> tryNumbers r c ns grid  -- Backtracks to try the next number
     | otherwise = tryNumbers r c ns grid  -- Number is not valid, try the next number
 
+clearCell :: Int -> Int -> Grid -> Grid
+clearCell r c grid =
+    take (r - 1) grid ++  -- Takes all the rows before the target row
+    [take (c - 1) (grid !! (r - 1)) ++ [Nothing] ++ drop c (grid !! (r - 1))] ++  -- Constructs the target row with the cleared cell
+    drop r grid  -- Takes all the rows after the target row
+
+
 -- | `randomPermutation` generates a random permutation of a list of numbers.
 randomPermutation :: [Int] -> IO [Int]
 randomPermutation [] = return []
@@ -177,23 +184,28 @@ data Command = AddCandidate Int Int Int
              | RemoveCandidate Int Int Int
              | GetCandidate Int Int
              | UpdateCell Int Int Int
+             | Clear Int Int
              | InvalidCommand
 
              
 -- | `parseInput` parses the user input.
 parseInput :: String -> Command
 parseInput input = case words input of
-    ["addCandidate:", rs, cs, ns] ->
+    ["addCand", rs, cs, ns] ->
         case mapM readMaybe [rs, cs, ns] of
             Just [r, c, n] -> AddCandidate r c n
             _ -> InvalidCommand
-    ["removeCandidate:", rs, cs, ns] ->
+    ["removeCand", rs, cs, ns] ->
         case mapM readMaybe [rs, cs, ns] of
             Just [r, c, n] -> RemoveCandidate r c n
             _ -> InvalidCommand
-    ["getCandidate:", rs, cs] ->
+    ["getCands", rs, cs] ->
         case mapM readMaybe [rs, cs] of
             Just [r, c] -> GetCandidate r c
+            _ -> InvalidCommand
+    ["clear", rs, cs] ->
+        case mapM readMaybe [rs, cs] of
+            Just [r, c] -> Clear r c
             _ -> InvalidCommand
     [rs, cs, ns] ->
         case mapM readMaybe [rs, cs, ns] of
@@ -249,6 +261,12 @@ playGame grid candidates = do
                         then playGame (updateGrid (r-1) (c-1) (Just n) grid) candidates
                         else do
                             putStrLn $ "Invalid move for row " ++ show r ++ ", column " ++ show c ++ ", number " ++ show n
+                            playGame grid candidates
+                    Clear r c -> 
+                        if inRange (r-1) (c-1)
+                        then playGame (clearCell r c grid) candidates
+                        else do
+                            putStrLn $ "Invalid move for row " ++ show r ++ ", column " ++ show c
                             playGame grid candidates
                     InvalidCommand -> do
                         putStrLn "Invalid input"

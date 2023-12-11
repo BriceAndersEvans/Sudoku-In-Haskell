@@ -39,10 +39,10 @@ playGameOption = do
             let candidates = Game.emptyCandidates
             putStrLn "How to play:"            
             putStrLn "-Enter row, column, and number (e.g., 2 3 5)"
-            putStrLn "-To clear cells type 'clear:' followed by row and column."
-            putStrLn "-To add candidates type 'addCand:' followed by row, column, and number."
-            putStrLn "-To remove candidates type 'removeCand:' followed by row, column, and number."
-            putStrLn "-To a list of candidates at any cell type 'getCandids:' followed by the row and column."
+            putStrLn "-To clear cells type 'clear' followed by row and column."
+            putStrLn "-To add candidates type 'addCand' followed by row, column, and number."
+            putStrLn "-To remove candidates type 'removeCand' followed by row, column, and number."
+            putStrLn "-To a list of candidates at any cell type 'getCands:' followed by the row and column."
             putStrLn "-Enter 'q' to quit.\n"
             Game.playGame puzzleGrid candidates
         Nothing -> putStrLn "No solution found"
@@ -71,6 +71,6 @@ mainMenu = do
         "1" -> generatePuzzleOption
         "2" -> solvePuzzleOption
         "3" -> playGameOption
-        "4" -> putStrLn "\nSee you later loser!!!!!"
+        "4" -> putStrLn "\nExiting demo"
         _   -> putStrLn "Invalid option. Try again." >> mainMenu
 
