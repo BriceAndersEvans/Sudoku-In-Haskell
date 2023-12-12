@@ -40,8 +40,8 @@ playGameOption = do
             putStrLn "How to play:"            
             putStrLn "-Enter row, column, and number (e.g., 2 3 5)"
             putStrLn "-To clear cells type 'clear' followed by row and column."
-            putStrLn "-To add candidates type 'addCand' followed by row, column, and number."
-            putStrLn "-To remove candidates type 'removeCand' followed by row, column, and number."
+            putStrLn "-To add candidates type 'addCands' followed by row, column, and a list of numbers."
+            putStrLn "-To remove candidates type 'removeCand' followed by row, column, and a list of numbers."
             putStrLn "-To a list of candidates at any cell type 'getCands:' followed by the row and column."
             putStrLn "-Enter 'q' to quit.\n"
             Game.playGame puzzleGrid candidates

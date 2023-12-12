@@ -24,20 +24,19 @@ type Candidates = [[[Maybe Int]]] -- Possible values. Each cell would have a lis
 -- | `emptyGrid` generates an empty Sudoku grid.
 
 -- | 'addCandidate' This function adds a candidate n to the cell at row r and column c
-addCandidate :: Int -> Int -> Int -> Candidates -> Candidates
-addCandidate r c n candidates = 
-    let currentCandidates = candidates !! (r - 1) !! (c - 1) --gets an array
-        newCandidates = Just n : filter (/= Just n) currentCandidates --Adds number to array if not already added
+addCandidates :: Int -> Int -> [Int] -> Candidates -> Candidates
+addCandidates r c ns candidates = 
+    let currentCandidates = candidates !! (r - 1) !! (c - 1)
+        newCandidates = foldr (\n acc -> Just n : filter (/= Just n) acc) currentCandidates ns
     in updateCandidates (r-1) (c-1) newCandidates candidates
-
 
 getCandidates :: Int -> Int -> Candidates -> [Int]
 getCandidates r c candidates = catMaybes (candidates !! (r - 1) !! (c - 1))
 
-removeCandidate :: Int -> Int -> Int -> Candidates -> Candidates
-removeCandidate r c n candidates = 
+removeCandidates :: Int -> Int -> [Int] -> Candidates -> Candidates
+removeCandidates r c ns candidates = 
     let currentCandidates = candidates !! (r - 1) !! (c - 1)
-        newCandidates = filter (/= Just n) currentCandidates
+        newCandidates = foldr (\n acc -> filter (/= Just n) acc) currentCandidates ns
     in updateCandidates (r-1) (c-1) newCandidates candidates
 
 updateCandidates :: Int -> Int -> [Maybe Int] -> Candidates -> Candidates
@@ -180,8 +179,8 @@ removeNumbers n grid = do
 {- Type Defintions-}
 
 {- Helper Functions for playGame-}
-data Command = AddCandidate Int Int Int
-             | RemoveCandidate Int Int Int
+data Command = AddCandidates Int Int [Int]
+             | RemoveCandidate Int Int [Int]
              | GetCandidate Int Int
              | UpdateCell Int Int Int
              | Clear Int Int
@@ -191,13 +190,13 @@ data Command = AddCandidate Int Int Int
 -- | `parseInput` parses the user input.
 parseInput :: String -> Command
 parseInput input = case words input of
-    ["addCand", rs, cs, ns] ->
-        case mapM readMaybe [rs, cs, ns] of
-            Just [r, c, n] -> AddCandidate r c n
+    ("addCands":rs:cs:ns) ->
+        case (readMaybe rs, readMaybe cs, mapM readMaybe ns) of
+            (Just r, Just c, Just nums) -> AddCandidates r c nums
             _ -> InvalidCommand
-    ["removeCand", rs, cs, ns] ->
-        case mapM readMaybe [rs, cs, ns] of
-            Just [r, c, n] -> RemoveCandidate r c n
+    ("removeCands":rs:cs:ns) ->
+        case (readMaybe rs, readMaybe cs, mapM readMaybe ns) of
+            (Just r, Just c, Just nums) -> RemoveCandidate r c nums
             _ -> InvalidCommand
     ["getCands", rs, cs] ->
         case mapM readMaybe [rs, cs] of
@@ -244,13 +243,13 @@ playGame grid candidates = do
             case input of
                 "q" -> putStrLn "Exiting game."
                 _   -> case parseInput input of
-                    AddCandidate r c n -> do
-                        let newCandidates = addCandidate r c n candidates
-                        putStrLn "+"
+                    AddCandidates r c ns -> do
+                        let newCandidates = addCandidates r c ns candidates
+                        putStrLn $ "Adding candidates: " ++ show ns ++ " to row " ++ show r ++ ", column " ++ show c
                         playGame grid newCandidates
-                    RemoveCandidate r c n -> do
-                        let newCandidates = removeCandidate r c n candidates
-                        putStrLn "-"
+                    RemoveCandidate r c ns -> do
+                        let newCandidates = removeCandidates r c ns candidates
+                        putStrLn $ "Removing candidates: " ++ show ns ++ " from row " ++ show r ++ ", column " ++ show c
                         playGame grid newCandidates
                     GetCandidate r c -> do
                         let cellCandidates = getCandidates r c candidates
