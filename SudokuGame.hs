@@ -23,8 +23,8 @@ type Candidates = [[[Maybe Int]]] -- Possible values. Each cell would have a lis
 
 -- | `emptyGrid` generates an empty Sudoku grid.
 
--- | 'updateCandidates' takes in a row, column, grid of candidates, and array of values that will be appended to
---    and array of candidates specified by the row and column. The new array will update the
+-- | 'addCandidates' takes in a row, column, grid of candidates, and array of values that will be appended to
+--    an array of candidates specified by the row and column. The new array will update the
 --    cell specified by the row and column.
 addCandidates :: Int -> Int -> [Int] -> Candidates -> Candidates
 addCandidates r c ns candidates = 
@@ -32,12 +32,14 @@ addCandidates r c ns candidates =
         newCandidates = foldr (\n acc -> Just n : filter (/= Just n) acc) currentCandidates ns
     in updateCandidates (r-1) (c-1) newCandidates candidates
 
--- | 'getCandidates' takes in a row column, and grid of candidates to return the array
+-- | 'getCandidates' takes in a row, column, and grid of candidates to return the array
 --   of candidates specified by the row and column
 getCandidates :: Int -> Int -> Candidates -> [Int]
 getCandidates r c candidates = catMaybes (candidates !! (r - 1) !! (c - 1))
 
--- |
+-- | 'removeCandidates' takes in a row, column, grid of candidates, and array of values that will be removed from
+--    and array of candidates specified by the row and column. The new array will update the
+--    cell specified by the row and column.
 removeCandidates :: Int -> Int -> [Int] -> Candidates -> Candidates
 removeCandidates r c ns candidates = 
     let currentCandidates = candidates !! (r - 1) !! (c - 1)
@@ -114,7 +116,7 @@ isFull = all (all isJust)
 findEmptyCell :: Grid -> (Int, Int)
 findEmptyCell grid = head [(r, c) | (r, row) <- zip [0..] grid, (c, cell) <- zip [0..] row, isNothing cell]
 
--- | 'inRange'
+-- | 'inRange' checks if 
 inRange :: Int -> Int -> Bool
 inRange r c 
     | ( r > -1 && r < 9 ) && ( c > -1 && c < 9) = True
@@ -244,17 +246,17 @@ isValidCell r c grid = case grid !! r !! c of
 --   to play the game.
 playGame :: Grid -> Candidates -> Int -> IO ()
 playGame grid candidates m = do
-    putStrLn "Current Sudoku Puzzle:"
+    putStrLn "\nCurrent Sudoku Puzzle:"
     displayGrid grid
     putStrLn $ "Mistake counter: " ++ show m
     if isFull grid
         then if isValidGrid grid
-            then putStrLn $ "Congratulations! You solved the puzzle! \nMistakes: " ++ show m
+            then putStrLn $ "\nCongratulations! You solved the puzzle! \nMistakes: " ++ show m
             else putStrLn "The puzzle is full but not solved correctly."
         else do
             input <- getLine
             case input of
-                "q" -> putStrLn "\nExiting game."
+                "q" -> putStrLn "\nGame over."
                 _   -> case parseInput input of
                     AddCandidates r c ns -> do
                         let newCandidates = addCandidates r c ns candidates

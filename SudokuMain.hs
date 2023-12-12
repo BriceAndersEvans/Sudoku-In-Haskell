@@ -30,10 +30,10 @@ solvePuzzleOption = do
 
 getDifficulty :: IO Int
 getDifficulty = do
-    putStrLn "Select difficulty (1-Easy, 2-Normal, 3-Heroic, 4-Legendary):"
+    putStrLn "Select difficulty (0-Demo, 1-Easy, 2-Normal, 3-Heroic, 4-Legendary):"
     choice <- getLine
     case readMaybe choice of
-        Just n | n `elem` [1, 2, 3, 4] -> return n
+        Just n | n `elem` [0, 1, 2, 3, 4] -> return n
         _ -> do
             putStrLn "Invalid input, please enter a number between 1 and 4."
             getDifficulty  -- Recursive call if input is invalid
@@ -48,6 +48,7 @@ playGameOption = do
         Just completedGrid -> do
             difficulty <- getDifficulty
             let numToRemove = case difficulty of
+                    0 -> 10
                     1 -> 20
                     2 -> 30
                     3 -> 40
