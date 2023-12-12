@@ -2,14 +2,23 @@ Planned Features:
 
 - Puzzle Generator 
   - Create a Puzzle Generator [Check]
-  - Create a Puzzle Scrambler []
-  - 
-  -
+  - Create a Puzzle Scrambler [Check]
+  - Have it print both to the console [Check]
 - Puzzle To User
   - Display and Update Puzzle To User [Check]
-  - Command Prompt Integeration of User Input 
-  - GUI
+  - Command Prompt Integeration of User Input [Check]
+  - Hints
+    - Solve Cell []
+    - Solve Block []
+    - Options Left In Block []
 - Puzzle Solver 
-  - Take Input of A Puzzle
-  - Solve Puzzle
-  - Output Solution of Puzzle
+  - Take Input of A Puzzle []
+  - Solve Puzzle []
+  - Output Solution of Puzzle []
+- Main File
+  - Main that acts as a main menu for the program 
+    - Greeting Prompt [Check]
+    - Puzzle Generator Prompt & Integeration [Check]
+    - Puzzle Solver Prompt & Integeration []
+    - Puzzle Game Prompt & Integeration []
+    - Exit Prompt & Exit Program Option [Check]
