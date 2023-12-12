@@ -230,46 +230,52 @@ isValidCell r c grid = case grid !! r !! c of
     Just n  -> isValid n r c grid
 
 {- playGame Function For Sudoku Game Puzzle-}
-playGame :: Grid -> Candidates -> IO ()
-playGame grid candidates = do
+playGame :: Grid -> Candidates -> Int -> IO ()
+playGame grid candidates m = do
     putStrLn "Current Sudoku Puzzle:"
     displayGrid grid
+    putStrLn $ "Mistake counter: " ++ show m
     if isFull grid
         then if isValidGrid grid
-            then putStrLn "Congratulations! You solved the puzzle!"
+            then putStrLn $ "Congratulations! You solved the puzzle! \nMistakes: " ++ show m
             else putStrLn "The puzzle is full but not solved correctly."
         else do
             input <- getLine
             case input of
-                "q" -> putStrLn "Exiting game."
+                "q" -> putStrLn "\nExiting game."
                 _   -> case parseInput input of
                     AddCandidates r c ns -> do
                         let newCandidates = addCandidates r c ns candidates
                         putStrLn $ "Adding candidates: " ++ show ns ++ " to row " ++ show r ++ ", column " ++ show c
-                        playGame grid newCandidates
+                        playGame grid newCandidates m
                     RemoveCandidate r c ns -> do
                         let newCandidates = removeCandidates r c ns candidates
                         putStrLn $ "Removing candidates: " ++ show ns ++ " from row " ++ show r ++ ", column " ++ show c
-                        playGame grid newCandidates
+                        playGame grid newCandidates m
                     GetCandidate r c -> do
                         let cellCandidates = getCandidates r c candidates
                         putStrLn $ "Candidates for cell (" ++ show r ++ ", " ++ show c ++ "): " ++ show cellCandidates
-                        playGame grid candidates
+                        playGame grid candidates m
                     UpdateCell r c n -> 
                         if isValid n (r-1) (c-1) grid
-                        then playGame (updateGrid (r-1) (c-1) (Just n) grid) candidates
+                        then playGame (updateGrid (r-1) (c-1) (Just n) grid) candidates m
                         else do
-                            putStrLn $ "Invalid move for row " ++ show r ++ ", column " ++ show c ++ ", number " ++ show n
-                            playGame grid candidates
+                            let newMistakeCount = if inRange (r-1) (c-1) 
+                                                then m + 1  -- Increment if in range but move is invalid
+                                                else m
+                            putStrLn $ if inRange (r-1) (c-1) 
+                                    then "Invalid move for row " ++ show r ++ ", column " ++ show c  ++ ", number " ++ show n
+                                    else "Cell out of bounds for row" ++ show r ++ ", column " ++ show c ++ ", number " ++ show n
+                            playGame grid candidates newMistakeCount
                     Clear r c -> 
                         if inRange (r-1) (c-1)
-                        then playGame (clearCell r c grid) candidates
+                        then playGame (clearCell r c grid) candidates m
                         else do
-                            putStrLn $ "Invalid move for row " ++ show r ++ ", column " ++ show c
-                            playGame grid candidates
+                            putStrLn $ "Cell out of bounds " ++ show r ++ ", column " ++ show c
+                            playGame grid candidates m
                     InvalidCommand -> do
-                        putStrLn "Invalid input"
-                        playGame grid candidates
+                        putStrLn "Not a command"
+                        playGame grid candidates m
 
 {- Main Of Sudoku Game -}
 main :: IO ()
@@ -284,5 +290,5 @@ main = do
             let candidates = emptyCandidates
             putStrLn "Sudoku Puzzle:"
             displayGrid puzzleGrid
-            playGame puzzleGrid candidates
+            playGame puzzleGrid candidates 0
         Nothing -> putStrLn "No solution found"

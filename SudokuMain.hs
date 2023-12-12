@@ -61,7 +61,7 @@ playGameOption = do
             putStrLn "-To remove candidates type 'removeCand' followed by row, column, and a list of numbers."
             putStrLn "-To a list of candidates at any cell type 'getCands:' followed by the row and column."
             putStrLn "-Enter 'q' to quit.\n"
-            Game.playGame puzzleGrid candidates
+            Game.playGame puzzleGrid candidates 0
         Nothing -> putStrLn "No solution found"
     mainMenu
 
