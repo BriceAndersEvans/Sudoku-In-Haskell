@@ -23,31 +23,40 @@ type Candidates = [[[Maybe Int]]] -- Possible values. Each cell would have a lis
 
 -- | `emptyGrid` generates an empty Sudoku grid.
 
--- | 'addCandidate' This function adds a candidate n to the cell at row r and column c
+-- | 'updateCandidates' takes in a row, column, grid of candidates, and array of values that will be appended to
+--    and array of candidates specified by the row and column. The new array will update the
+--    cell specified by the row and column.
 addCandidates :: Int -> Int -> [Int] -> Candidates -> Candidates
 addCandidates r c ns candidates = 
     let currentCandidates = candidates !! (r - 1) !! (c - 1)
         newCandidates = foldr (\n acc -> Just n : filter (/= Just n) acc) currentCandidates ns
     in updateCandidates (r-1) (c-1) newCandidates candidates
 
+-- | 'getCandidates' takes in a row column, and grid of candidates to return the array
+--   of candidates specified by the row and column
 getCandidates :: Int -> Int -> Candidates -> [Int]
 getCandidates r c candidates = catMaybes (candidates !! (r - 1) !! (c - 1))
 
+-- |
 removeCandidates :: Int -> Int -> [Int] -> Candidates -> Candidates
 removeCandidates r c ns candidates = 
     let currentCandidates = candidates !! (r - 1) !! (c - 1)
         newCandidates = foldr (\n acc -> filter (/= Just n) acc) currentCandidates ns
     in updateCandidates (r-1) (c-1) newCandidates candidates
 
+-- | 'updateCandidates' takes in a row, column, and array of values that will replace the values 
+--    at the given cell specified by the row and column
 updateCandidates :: Int -> Int -> [Maybe Int] -> Candidates -> Candidates
 updateCandidates r c newCandidates candidates =
     take r candidates ++
     [take c (candidates !! r) ++ [newCandidates] ++ drop (c + 1) (candidates !! r)] ++
     drop (r + 1) candidates
 
+-- | 'emptyCandidates' initializes a 9x9 grid of arrays that contain Nothing
 emptyCandidates :: Candidates
 emptyCandidates = replicate 9 (replicate 9 (replicate 1 Nothing))
 
+-- | 'emptyGrid' initializes a 9x9 sudoku board of Nothing
 emptyGrid :: Grid
 emptyGrid = replicate 9 (replicate 9 Nothing)
 
@@ -77,6 +86,7 @@ tryNumbers r c (n:ns) grid
             Nothing -> tryNumbers r c ns grid  -- Backtracks to try the next number
     | otherwise = tryNumbers r c ns grid  -- Number is not valid, try the next number
 
+-- | 'clearCell' removes a Maybe Int from a cell on the sudoku board and replaces it with Nothing.
 clearCell :: Int -> Int -> Grid -> Grid
 clearCell r c grid =
     take (r - 1) grid ++  -- Takes all the rows before the target row
@@ -230,6 +240,8 @@ isValidCell r c grid = case grid !! r !! c of
     Just n  -> isValid n r c grid
 
 {- playGame Function For Sudoku Game Puzzle-}
+-- | 'playGame' takes in a sudoku grid, candidates grid, and number of mistakes thus far
+--   to play the game.
 playGame :: Grid -> Candidates -> Int -> IO ()
 playGame grid candidates m = do
     putStrLn "Current Sudoku Puzzle:"
