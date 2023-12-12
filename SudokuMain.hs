@@ -1,6 +1,7 @@
 import qualified SudokuGenerator as Generator
 import qualified SudokuGame as Game
 import qualified SudokuSolver as Solver
+import Text.Read (readMaybe)
 
 {- Main Menu Option Functions-}
 
@@ -27,6 +28,16 @@ solvePuzzleOption = do
     -- Implement the puzzle solving logic
     mainMenu
 
+getDifficulty :: IO Int
+getDifficulty = do
+    putStrLn "Select difficulty (1-Easy, 2-Normal, 3-Heroic, 4-Legendary):"
+    choice <- getLine
+    case readMaybe choice of
+        Just n | n `elem` [1, 2, 3, 4] -> return n
+        _ -> do
+            putStrLn "Invalid input, please enter a number between 1 and 4."
+            getDifficulty  -- Recursive call if input is invalid
+
 -- | `playGameOption` is the main menu option to play a Sudoku game.
 playGameOption :: IO ()
 playGameOption = do
@@ -35,10 +46,16 @@ playGameOption = do
     result <- Generator.generateCompletedGrid Generator.emptyGrid
     case result of
         Just completedGrid -> do
-            puzzleGrid <- Generator.removeNumbers 30 completedGrid
+            difficulty <- getDifficulty
+            let numToRemove = case difficulty of
+                    1 -> 20
+                    2 -> 30
+                    3 -> 40
+                    4 -> 50
+            puzzleGrid <- Generator.removeNumbers numToRemove completedGrid
             let candidates = Game.emptyCandidates
-            putStrLn "How to play:"            
-            putStrLn "-Enter row, column, and number (e.g., 2 3 5)"
+            putStrLn "\nHow to play:"
+            putStrLn "-Enter row, column, and number (e.g., 2 3 5) to input a value into a cell."
             putStrLn "-To clear cells type 'clear' followed by row and column."
             putStrLn "-To add candidates type 'addCands' followed by row, column, and a list of numbers."
             putStrLn "-To remove candidates type 'removeCand' followed by row, column, and a list of numbers."
