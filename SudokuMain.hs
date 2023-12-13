@@ -25,6 +25,7 @@ solvePuzzleOption :: IO ()
 solvePuzzleOption = do
     -- Logic to solve a Sudoku puzzle
     putStrLn "Solving a Sudoku puzzle..."
+    Solver.solveMyGridNew
     -- Implement the puzzle solving logic
     mainMenu
 
