@@ -235,12 +235,6 @@ isValidGrid grid = all isUniqueRow [0..8] && all isUniqueColumn [0..8] && all is
         isUnique :: [Int] -> Bool
         isUnique lst = length lst == length (nub lst)
 
--- | `isValidCell` checks if a cell is valid in the grid
-isValidCell :: Int -> Int -> Grid -> Bool
-isValidCell r c grid = case grid !! r !! c of
-    Nothing -> True
-    Just n  -> isValid n r c grid
-
 {- playGame Function For Sudoku Game Puzzle-}
 -- | 'playGame' takes in a sudoku grid, candidates grid, and number of mistakes thus far
 --   to play the game.
@@ -256,7 +250,7 @@ playGame grid candidates m = do
         else do
             input <- getLine
             case input of
-                "q" -> putStrLn "\nGame over."
+                "q" -> putStrLn "\nGame over"
                 _   -> case parseInput input of
                     AddCandidates r c ns -> do
                         let newCandidates = addCandidates r c ns candidates
